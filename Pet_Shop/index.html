@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Vue.js Pet Depot</title>
+
+
+    <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css"
+    >
+
+
+    <style>
+
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            background-color: #ffffff;
+            color: #222222;
+        }
+
+
+        #app {
+            width: 900px;
+            max-width: 90%;
+            margin: 40px auto;
+        }
+
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #dddddd;
+            padding-bottom: 20px;
+        }
+
+
+        header h1 {
+            margin: 0;
+            font-size: 30px;
+        }
+
+
+        button {
+            padding: 10px 16px;
+            border: 1px solid #999999;
+            border-radius: 4px;
+            background-color: #ffffff;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+
+        button:hover {
+            background-color: #f3f3f3;
+        }
+
+
+        button:disabled {
+            cursor: not-allowed;
+            opacity: 0.4;
+        }
+
+
+        .checkout-button {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+
+        main {
+            margin-top: 40px;
+        }
+
+
+        .product-page {
+            display: flex;
+            align-items: center;
+            gap: 50px;
+        }
+
+
+        figure {
+            margin: 0;
+        }
+
+
+        figure img {
+            width: 280px;
+            height: auto;
+            display: block;
+        }
+
+
+        .product-info {
+            flex: 1;
+        }
+
+
+        .product-info h2 {
+            font-size: 28px;
+            margin-top: 0;
+        }
+
+
+        .product-info p {
+            font-size: 17px;
+            line-height: 1.5;
+        }
+
+
+        .price {
+            font-weight: bold;
+        }
+
+
+        .inventory {
+            margin-top: 15px;
+        }
+
+
+        .checkout-page {
+            padding: 30px;
+            border: 1px solid #dddddd;
+        }
+
+
+        .checkout-page h2 {
+            margin-top: 0;
+        }
+
+
+        .checkout-page p {
+            font-size: 17px;
+        }
+
+
+        .checkout-page input,
+        .checkout-page select {
+            padding: 8px;
+            margin-left: 10px;
+            border: 1px solid #aaaaaa;
+            border-radius: 4px;
+        }
+
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+<div id="app">
+
+    <header>
+
+
+        <h1>{{ sitename }}</h1>
+
+
+        <button
+            class="checkout-button"
+            v-on:click="showCheckout"
+        >
+
+            {{ cartItemCount }}
+
+            <span class="fas fa-cart-plus"></span>
+
+            Checkout
+
+        </button>
+
+
+    </header>
+
+
+    <main>
+
+
+        <div
+            class="product-page"
+            v-if="showProduct"
+        >
+
+
+            <figure>
+
+                <img
+                    v-bind:src="product.image"
+                    v-bind:alt="product.title"
+                >
+
+            </figure>
+
+
+            <div class="product-info">
+
+
+                <h2 v-text="product.title"></h2>
+
+
+                <p v-html="product.description"></p>
+
+
+                <p class="price">
+
+                    Price: {{ product.price }}
+
+                </p>
+
+
+                <p class="inventory">
+
+                    Available Inventory:
+                    {{ product.availableInventory }}
+
+                </p>
+
+
+                <button
+                    v-on:click="addToCart"
+                    v-if="canAddToCart"
+                >
+
+                    Add to cart
+
+                </button>
+
+
+                <button
+                    disabled="disabled"
+                    v-else
+                >
+
+                    Add to cart
+
+                </button>
+
+
+            </div>
+
+
+        </div>
+
+
+        <div
+            class="checkout-page"
+            v-else
+        >
+
+
+            <h2>Checkout</h2>
+
+
+            <p>
+                Items in cart:
+                {{ cart.length }}
+            </p>
+
+
+            <p>
+
+                <strong>First Name:</strong>
+
+                <input v-model.trim="order.firstName">
+
+            </p>
+
+
+            <p>
+
+                <strong>Last Name:</strong>
+
+                <input v-model.trim="order.lastName">
+
+            </p>
+
+
+            <p>
+
+                <strong>Address:</strong>
+
+                <input v-model="order.address">
+
+            </p>
+
+
+            <p>
+
+                <strong>City:</strong>
+
+                <input v-model="order.city">
+
+            </p>
+
+
+            <p>
+
+                <strong>State:</strong>
+
+                <select v-model="order.state">
+
+                    <option disabled value="">
+                        State
+                    </option>
+
+
+                    <option
+                        v-for="(state, key) in states"
+                        v-bind:key="key"
+                        v-bind:value="state"
+                    >
+
+                        {{ key }}
+
+                    </option>
+
+                </select>
+
+            </p>
+
+
+            <p>
+
+                <strong>Zip Code:</strong>
+
+                <input v-model="order.zipCode">
+
+            </p>
+
+
+            <p>
+
+                <input
+                    type="checkbox"
+                    id="gift"
+                    v-model="order.gift"
+                    v-bind:true-value="order.sendGift"
+                    v-bind:false-value="order.dontSendGift"
+                >
+
+                <label for="gift">
+                    Ship As Gift?
+                </label>
+
+            </p>
+
+
+            <p>
+
+                <input
+                    type="radio"
+                    id="home"
+                    value="Home"
+                    v-model="order.method"
+                >
+
+                <label for="home">
+                    Home
+                </label>
+
+
+                <input
+                    type="radio"
+                    id="business"
+                    value="Business"
+                    v-model="order.method"
+                >
+
+                <label for="business">
+                    Business
+                </label>
+
+            </p>
+
+
+            <h2>Order Information</h2>
+
+
+            <p>
+
+                First Name:
+                {{ order.firstName }}
+
+            </p>
+
+
+            <p>
+
+                Last Name:
+                {{ order.lastName }}
+
+            </p>
+
+
+            <p>
+
+                Address:
+                {{ order.address }}
+
+            </p>
+
+
+            <p>
+
+                City:
+                {{ order.city }}
+
+            </p>
+
+
+            <p>
+
+                State:
+                {{ order.state }}
+
+            </p>
+
+
+            <p>
+
+                Zip Code:
+                {{ order.zipCode }}
+
+            </p>
+
+
+            <p>
+
+                Gift?:
+                {{ order.gift }}
+
+            </p>
+
+
+            <p>
+
+                Shipping Method:
+                {{ order.method }}
+
+            </p>
+
+
+        </div>
+
+
+    </main>
+
+
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>
+
+
+<script>
+
+
+    var webstore = new Vue({
+
+
+        el: '#app',
+
+
+        data: {
+
+
+            sitename: 'Vue.js Pet Depot',
+
+
+            showProduct: true,
+
+
+            product: {
+
+
+                id: 1001,
+
+
+                title: 'Cat Food, 25lb bag',
+
+
+                description:
+                    'A 25 pound bag of <em>irresistible</em>, organic goodness for your cat.',
+
+
+                price: "$20,00",
+
+
+                image: 'cat-food.webp',
+
+
+                availableInventory: 5
+
+
+            },
+
+
+            cart: [],
+
+
+            states: {
+
+
+                AL: 'Alabama',
+
+
+                AK: 'Alaska',
+
+
+                AZ: 'Arizona',
+
+
+                AR: 'Arkansas',
+
+
+                CA: 'California'
+
+
+            },
+
+
+            order: {
+
+
+                firstName: '',
+
+
+                lastName: '',
+
+
+                address: '',
+
+
+                city: '',
+
+
+                state: '',
+
+
+                zipCode: '',
+
+
+                sendGift: 'Send as a gift',
+
+
+                dontSendGift: 'Do not send as a gift',
+
+
+                gift: 'Do not send as a gift',
+
+
+                method: 'Home'
+
+
+            }
+
+
+        },
+
+
+        methods: {
+
+
+            addToCart: function() {
+
+
+                if (this.product.availableInventory > 0) {
+
+
+                    this.product.availableInventory -= 1;
+
+
+                    this.cart.push(this.product.id);
+
+
+                }
+
+
+            },
+
+
+            showCheckout: function() {
+
+
+                this.showProduct =
+                    this.showProduct ? false : true;
+
+
+            }
+
+
+        },
+
+
+        computed: {
+
+
+            cartItemCount: function() {
+
+
+                return this.cart.length || "";
+
+
+            },
+
+
+            canAddToCart: function() {
+
+
+                return this.product.availableInventory > 0;
+
+
+            }
+
+
+        }
+
+
+    });
+
+
+</script>
+
+
+</body>
+
+</html>
